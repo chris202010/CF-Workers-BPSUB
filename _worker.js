@@ -59,9 +59,10 @@ export default {
                 subConverter = subConverter.split("//")[1] || subConverter;
             }
             subConfig = url.searchParams.get('subconfig') || subConfig;
-            const uuid = url.searchParams.get('uuid') || env.UUID;
+            const trojan = url.searchParams.get('trojan') || url.searchParams.has('password') || false;
+            const uuid = trojan ? url.searchParams.get('password') : (url.searchParams.get('uuid') || env.UUID);
             const uuid_json = await getLocalData(bphost, uuid);
-
+            const xhttp = url.searchParams.get('xhttp') || false;
             let 最终路径 = url.searchParams.has('proxyip') ? `/snippets/ip=${url.searchParams.get('proxyip')}` : (proxyIP && proxyIP.trim() !== '') ? `/snippets/ip=${encodeURIComponent(proxyIP)}` : `/snippets`;
             let socks5 = null;
             const 全局socks5 = (url.searchParams.has('global')) ? true : false;
@@ -89,8 +90,8 @@ export default {
                 const selected = uuid_json[randomIndex];
                 const uuid = selected.uuid;
                 const 伪装域名 = selected.host;
-
-                let subConverterUrl = `https://${优选订阅生成器}/sub?uuid=${uuid}&host=${伪装域名}&&path=${encodeURIComponent(最终路径)}`;
+                const 验证字段名 = trojan ? 'password' : 'uuid';
+                let subConverterUrl = `https://${优选订阅生成器}/sub?${验证字段名}=${uuid}&host=${伪装域名}&path=${encodeURIComponent(最终路径)}`;
                 if (需要订阅转换的UA.some(ua => userAgent.includes(ua)) &&
                     !userAgent.includes(('CF-Workers-SUB').toLowerCase()) &&
                     !isSubConverterRequest) {
@@ -298,9 +299,16 @@ export default {
                         const selected = uuid_json[randomIndex];
                         const uuid = selected.uuid;
                         const 伪装域名 = selected.host;
-
-                        const 为烈士Link = 'vl' + 'es' + `s://${uuid}@${address}:${port}?security=tls&sni=${伪装域名}&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径) + (跳过证书验证 ? '&allowInsecure=1' : '')}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}&encryption=none#${encodeURIComponent(addressid + 节点备注)}`;
-                        return 为烈士Link;
+                        if (trojan) {
+                            const 木马Link = 'tr' + 'oj' + `an://${uuid}@${address}:${port}?security=tls&sni=${伪装域名}&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径) + (跳过证书验证 ? '&allowInsecure=1' : '')}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}#${encodeURIComponent(addressid + 节点备注)}`
+                            return 木马Link;
+                        } else {
+                            const 为烈士Link = 'vl' + 'es' + `s://${uuid}@${address}:${port}?security=tls&sni=${伪装域名}&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径) + (跳过证书验证 ? '&allowInsecure=1' : '')}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}&encryption=none#${encodeURIComponent(addressid + 节点备注)}`;
+                            if (xhttp) {
+                                const xhttpLink = 'vl' + 'es' + `s://${uuid}@${address}:${port}?security=tls&sni=${伪装域名}&type=xhttp&host=${伪装域名}&path=${encodeURIComponent(最终路径) + (跳过证书验证 ? '&allowInsecure=1' : '')}&mode=stream-one&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}&encryption=none#${encodeURIComponent(addressid + 节点备注 + '-XHTTP')}`;
+                                return 为烈士Link + '\n' + xhttpLink;
+                            } else return 为烈士Link;
+                        }
                     }
                 }).join('\n');
 
@@ -523,6 +531,7 @@ async function subHtml(request, hostLength = hosts.length) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@keeex/qrcodejs-kx@1.0.2/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-sha256@0.11.1/src/sha256.min.js"></script>
     <style>
         :root {
             --primary-color: #00ffff;
@@ -1720,6 +1729,8 @@ async function subHtml(request, hostLength = hosts.length) {
                                         <option value="v" selected>🎯 白嫖哥源码</option>
                                         <option value="t12">📘 天书12源码</option>
                                         <option value="t13">📗 天书13源码(不支持ios客户端、ed配置)</option>
+                                        <option value="my">🔥 ymyuuu源码(支持xhttp协议)</option>
+                                        <option value="ca110us">🎠 ca110us源码(trojan协议)</option>
                                     </select>
                                 </div>
 
@@ -1966,8 +1977,8 @@ async function subHtml(request, hostLength = hosts.length) {
             </div>
             
             <!-- 高级参数设置 -->
-            <div class="section">
-                <div class="section-title">🔧 高级参数设置</div>
+            <div class="section collapsible collapsed">
+                <div class="section-title" onclick="toggleSection(this)">🔧 节点高级设置</div>
                 <div class="section-content">
                     <div class="form-group">
                         <label style="margin-bottom: 15px;">高级参数选项：</label>
@@ -1983,7 +1994,7 @@ async function subHtml(request, hostLength = hosts.length) {
                         </div>
                         <div class="example">⚙️ 高级参数说明：
 • ed=2560：启用0-RTT
-• scv：跳过TLS证书验证，适用于自签名证书场景
+• scv：跳过TLS证书验证，适用于双向解析的免费域名
 • 注意：天书13源码不支持ed参数配置
                         </div>
                     </div>
@@ -2403,6 +2414,18 @@ async function subHtml(request, hostLength = hosts.length) {
                 params.append('scv', 'true');
             }
             
+            // 检查是否选择了 ymyuuu 源码，如果是则添加 xhttp=true 参数
+            // 检查是否选择了 ca110us 源码，如果是则添加 trojan=true 参数
+            const isSnippetsTab = activeTab && activeTab.id === 'snippets-tab';
+            if (isSnippetsTab) {
+                const selectedSource = getSelectedSnippetSource();
+                if (selectedSource === 'my') {
+                    params.append('xhttp', 'true');
+                } else if (selectedSource === 'ca110us') {
+                    params.append('trojan', 'true');
+                }
+            }
+            
             // 组合最终URL
             const queryString = params.toString();
             if (queryString) {
@@ -2773,7 +2796,9 @@ async function subHtml(request, hostLength = hosts.length) {
         const snippetUrlMap = {
             'v': 'https://raw.githubusercontent.com/cmliu/CF-Workers-BPSUB/main/snippet/v.js',
             't12': 'https://raw.githubusercontent.com/cmliu/CF-Workers-BPSUB/main/snippet/t12.js', 
-            't13': 'https://raw.githubusercontent.com/cmliu/CF-Workers-BPSUB/main/snippet/t13.js'
+            't13': 'https://raw.githubusercontent.com/cmliu/CF-Workers-BPSUB/main/snippet/t13.js',
+            'my': 'https://raw.githubusercontent.com/cmliu/CF-Workers-BPSUB/main/snippet/my.js',
+            'ca110us': 'https://raw.githubusercontent.com/cmliu/CF-Workers-BPSUB/main/snippet/ca110us.js'
         };
 
         // 获取当前选中的源码类型
@@ -2847,11 +2872,39 @@ async function subHtml(request, hostLength = hosts.length) {
             
             if (snippetCodeCache) {
                 const uuid = uuidInput.value.trim();
+                let processedUuid = uuid;
+                
+                // 检查当前选择的源码类型
+                const selectedSource = getSelectedSnippetSource();
+                
+                // 如果选择的是ca110us源码且UUID不为空，则进行sha224处理
+                if (selectedSource === 'ca110us' && uuid !== '') {
+                    try {
+                        // 使用sha224函数处理UUID
+                        if (typeof window.sha224 !== 'undefined') {
+                            processedUuid = window.sha224(uuid);
+                            console.log('🎯 使用 window.sha224 处理UUID');
+                            console.log('📝 原始UUID:', uuid);
+                            console.log('🔐 SHA-224结果:', processedUuid);
+                        } else if (typeof sha224 !== 'undefined') {
+                            processedUuid = sha224(uuid);
+                            console.log('🎯 使用 sha224 处理UUID');
+                            console.log('📝 原始UUID:', uuid);
+                            console.log('🔐 SHA-224结果:', processedUuid);
+                        } else {
+                            console.warn('⚠️ SHA224函数未加载，跳过验证');
+                        }
+                    } catch (error) {
+                        console.error('❌ SHA224处理失败:', error);
+                        processedUuid = ''; // 失败时跳过验证
+                    }
+                }
+                
                 let updatedCode = snippetCodeCache;
                 
                 // 替换第一行的 FIXED_UUID 值
                 const firstLine = "const FIXED_UUID = '';";
-                const newFirstLine = \`const FIXED_UUID = '\${uuid}';\`;
+                const newFirstLine = \`const FIXED_UUID = '\${processedUuid}';\`;
                 updatedCode = updatedCode.replace(firstLine, newFirstLine);
                 
                 snippetCodeElement.value = updatedCode;
